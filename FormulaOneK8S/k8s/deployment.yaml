@@ -1,0 +1,51 @@
+# Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kubernetes.io/change-cause: "Updating my docker image from v1 to v2"
+  name: formula-app-deployment
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: formula-app
+  template:
+    metadata:
+      labels:
+        app: formula-app
+        app.kubernetes.io/name: formula-app
+        env: prod
+      name: myformulaonek8s
+    spec:
+      containers:
+        - env:
+            - name: ASPNETCORE_URLS
+              value: http://+:80
+          image: sovannarapov/formulaonek8s:v2
+          name: formula-app
+          ports:
+            - containerPort: 80
+              name: http-web-api
+          resources:
+            limits:
+              cpu: 200m
+              memory: 200Mi
+            requests:
+              cpu: 100m
+              memory: 100Mi
+---
+# Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: my-lb-service
+spec:
+  ports:
+    - name: formula-app-port
+      port: 8080
+      protocol: TCP
+      targetPort: 80
+  selector:
+    app.kubernetes.io/name: formula-app
+  type: LoadBalancer
